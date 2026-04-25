@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
@@ -10,7 +11,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "paths": {
+      "@callbreak/shared": ["../../packages/shared/src/index.ts"],
+      "@callbreak/shared/*": ["../../packages/shared/src/*"]
+    },
     "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src", "../../packages/shared/src"]
 }
