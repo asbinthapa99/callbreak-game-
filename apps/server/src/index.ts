@@ -1,4 +1,6 @@
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import { createSocketServer } from './socket/server.js';
@@ -9,11 +11,25 @@ import { registerChatHandlers } from './socket/handlers/chat.js';
 import { PORT, CORS_ORIGIN } from './config.js';
 import { logger } from './lib/logger.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDistDir = path.resolve(__dirname, '../../client/dist');
+const corsOptions = CORS_ORIGIN ? { origin: CORS_ORIGIN } : undefined;
+
 const app = express();
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+app.use(express.static(clientDistDir));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/socket.io')) {
+    next();
+    return;
+  }
+
+  res.sendFile(path.join(clientDistDir, 'index.html'));
+});
 
 const httpServer = createServer(app);
 const io = createSocketServer(httpServer);

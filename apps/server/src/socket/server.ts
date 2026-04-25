@@ -10,6 +10,6 @@ export type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 export function createSocketServer(httpServer: HttpServer): TypedIO {
   return new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
-    cors: { origin: CORS_ORIGIN, methods: ['GET', 'POST'] },
+    cors: CORS_ORIGIN ? { origin: CORS_ORIGIN, methods: ['GET', 'POST'] } : undefined,
   });
 }

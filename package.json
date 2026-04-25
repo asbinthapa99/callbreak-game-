@@ -6,9 +6,14 @@
     "packages/*",
     "apps/*"
   ],
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=apps/server\" \"npm run dev --workspace=apps/client\"",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/server && npm run build --workspace=apps/client",
+    "start": "npm run start --workspace=apps/server",
     "test": "npm run test --workspace=packages/shared --workspace=apps/server",
     "lint": "eslint . --ext .ts,.tsx"
   },
