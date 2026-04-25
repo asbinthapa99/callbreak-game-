@@ -87,13 +87,23 @@ export default function TrickArea() {
         {trick?.plays.map(play => {
           const displaySeat = (play.seat - yourSeat + 4) % 4;
           const style = SLOT[displaySeat];
+          
+          // Use the latest completed trick to determine where to fly out if the trick is clearing
+          const completedCount = game.round?.completedTricks.length ?? 0;
+          const lastTrick = completedCount > 0 ? game.round?.completedTricks[completedCount - 1] : null;
+          const exitTargetSeat = lastTrick?.winnerSeat !== undefined ? lastTrick.winnerSeat : play.seat;
+          const exitDisplaySeat = (exitTargetSeat - yourSeat + 4) % 4;
+
           return (
             <motion.div
               key={`${play.card.id}-${play.seat}`}
-              initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
-              animate={{ scale: 1, opacity: 1, rotate: (displaySeat - 2) * 2 }}
-              exit={{ ...FLY_OUT[displaySeat], scale: 0.3, opacity: 0 }}
-              transition={{ duration: 0.28, type: 'spring', damping: 18 }}
+              initial={{ ...FLY_OUT[displaySeat], scale: 0.2, opacity: 0, rotate: -30 }}
+              animate={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: (displaySeat - 2) * 5 }}
+              exit={{ 
+                ...FLY_OUT[exitDisplaySeat], 
+                scale: 0.2, opacity: 0, rotate: 180 
+              }}
+              transition={{ duration: 0.4, type: 'spring', damping: 15 }}
               className="absolute"
               style={style}
             >

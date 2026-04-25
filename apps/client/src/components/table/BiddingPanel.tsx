@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Card } from '@callbreak/shared';
 import { socket } from '../../socket/client.js';
@@ -28,6 +28,7 @@ function estimateTricks(hand: Card[]): number {
 
 export default function BiddingPanel() {
   const roomView = useRoomStore(s => s.roomView);
+  const [selectedBid, setSelectedBid] = useState<number | null>(null);
 
   const hint = useMemo(() => {
     if (!roomView) return null;
@@ -41,9 +42,10 @@ export default function BiddingPanel() {
 
   if (!isMyBidTurn) return null;
 
-  function handleBid(bid: number) {
+  function handleConfirm() {
+    if (selectedBid === null) return;
     sounds.bid();
-    socket.emit('game:bid', { bid }, (result) => {
+    socket.emit('game:bid', { bid: selectedBid }, (result) => {
       if (!result.ok) {
         sounds.error();
       }
@@ -57,43 +59,46 @@ export default function BiddingPanel() {
       initial={{ y: 50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 50, opacity: 0 }}
-      className="flex flex-col items-center gap-3"
+      className="bg-white rounded-[32px] p-4 shadow-2xl border-4 border-black border-b-[8px] flex flex-col items-center gap-4 relative w-full max-w-sm mx-auto"
     >
-      <div className="flex flex-col items-center gap-0.5">
-        <div className="text-white font-display text-base drop-shadow tracking-wide">
-          How many tricks will you win?
-        </div>
-        {hint !== null && (
-          <div className="text-white/50 font-body text-xs">
-            Estimated strength: ~{hint} trick{hint !== 1 ? 's' : ''}
-          </div>
-        )}
+      <div className="w-full text-left font-display text-xl tracking-wider uppercase text-black font-black" style={{ WebkitTextStroke: '1px black', color: 'white', textShadow: '2px 2px 0 #000' }}>
+        PLACE YOUR CALL
       </div>
 
-      <div className="flex gap-2 flex-wrap justify-center max-w-xs">
+      <div className="flex gap-2 flex-wrap justify-center w-full px-2">
         {bids.map(bid => {
+          const isSelected = selectedBid === bid;
           const isHint = hint !== null && bid === hint;
           return (
             <motion.button
               key={bid}
-              whileHover={{ scale: 1.14, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => handleBid(bid)}
-              className={`w-13 h-13 rounded-2xl font-display text-2xl shadow-lg transition-colors
-                          ${isHint
-                  ? 'bg-cb-gold border-4 border-yellow-300 text-gray-900 ring-2 ring-yellow-200 ring-offset-1 ring-offset-transparent'
-                  : 'bg-cb-gold border-4 border-yellow-600 text-gray-900 hover:bg-yellow-300'
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedBid(bid)}
+              className={`w-12 h-12 rounded-full font-display text-2xl font-black shadow-lg transition-colors border-[3px] border-black flex flex-col items-center justify-center
+                          ${isSelected
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-green-500 text-white hover:bg-green-400'
                 }`}
-              style={{ width: 52, height: 52 }}
             >
               {bid}
-              {isHint && (
-                <span className="block text-[8px] font-body leading-none -mt-0.5 opacity-70">hint</span>
-              )}
             </motion.button>
           );
         })}
       </div>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleConfirm}
+        disabled={selectedBid === null}
+        className={`px-6 py-2 rounded-full font-display font-black text-lg border-[3px] border-black transition-all shadow-md
+                    ${selectedBid !== null 
+                      ? 'bg-yellow-400 text-black hover:bg-yellow-300' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'}`}
+      >
+        <span className="mr-2">✓</span> PLACE CALL
+      </motion.button>
     </motion.div>
   );
 }

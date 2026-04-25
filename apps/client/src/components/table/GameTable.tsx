@@ -23,6 +23,7 @@ export default function GameTable() {
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [roomCopied, setRoomCopied] = useState(false);
   const [lastTrick, setLastTrick] = useState<Trick | null>(null);
   const [seenCount, setSeenCount] = useState(0);
   const prevPhaseRef = useRef<string | null>(null);
@@ -66,7 +67,7 @@ export default function GameTable() {
 
   if (!roomView) return null;
 
-  const { players, game, yourSeat, config } = roomView;
+  const { code, players, game, yourSeat, config } = roomView;
   const myPlayer = players.find(p => p.seat === yourSeat);
 
   // Relative seat positions: 0=south(you), 1=east(right), 2=north(top), 3=west(left)
@@ -93,6 +94,14 @@ export default function GameTable() {
   }[game.phase] ?? '';
 
   const spadesBroken = game.round?.spadesBroken ?? false;
+
+  function copyRoomLink() {
+    const url = `${window.location.origin}/room/${code}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setRoomCopied(true);
+      setTimeout(() => setRoomCopied(false), 1600);
+    });
+  }
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-transparent">
@@ -134,6 +143,12 @@ export default function GameTable() {
 
           <div className="flex flex-col items-center">
             <div className="text-white/70 font-display text-xs tracking-widest">{phaseLabel}</div>
+            <button
+              onClick={copyRoomLink}
+              className="mt-1 rounded-full border border-cb-gold/35 bg-black/25 px-3 py-0.5 font-mono text-[11px] font-bold tracking-[0.2em] text-cb-gold transition-colors hover:bg-cb-gold hover:text-black"
+            >
+              {roomCopied ? 'COPIED' : code}
+            </button>
             {spadesBroken && (
               <div className="text-xs text-purple-300 font-body animate-fade-in">♠ spades broken</div>
             )}
@@ -197,10 +212,11 @@ export default function GameTable() {
               <div className="absolute inset-0 rounded-[50%] overflow-hidden">
                 {/* Round watermark */}
                 {game.round && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="font-display text-white/10 text-3xl tracking-[0.4em] uppercase select-none">
-                      ROUND {game.round.index + 1}/5
-                    </span>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                    <div className="flex flex-col items-center justify-center bg-black/40 w-48 h-48 rounded-full border-4 border-black/50">
+                      <span className="font-display text-white text-xl tracking-[0.2em] uppercase">ROUND</span>
+                      <span className="font-display text-white text-6xl font-black">{game.round.index + 1}</span>
+                    </div>
                   </div>
                 )}
 

@@ -7,11 +7,12 @@
 
   body {
     font-family: 'Nunito', system-ui, sans-serif;
-    background-color: #0d1117;
+    background-color: #B22222;
     background-image:
-      radial-gradient(ellipse at top left, rgba(45, 106, 79, 0.15), transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(245, 197, 24, 0.1), transparent 50%),
-      linear-gradient(to bottom, #0f172a, #020617);
+      linear-gradient(45deg, #8B1A1A 25%, transparent 25%, transparent 75%, #8B1A1A 75%, #8B1A1A),
+      linear-gradient(45deg, #8B1A1A 25%, transparent 25%, transparent 75%, #8B1A1A 75%, #8B1A1A);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
     min-height: 100vh;
     color: white;
     overflow-x: hidden;
@@ -113,27 +114,19 @@
 
   /* ── Felt table ── */
   .felt-table {
-    background: radial-gradient(ellipse at 50% 40%, #2A5A41 0%, #173625 70%, #0F2418 100%);
+    background: #0A8C40;
     box-shadow:
-      0 0 0 8px rgba(15, 23, 42, 0.8),
-      0 0 0 10px rgba(255, 255, 255, 0.1),
-      0 30px 60px rgba(0,0,0,0.8),
-      inset 0 0 60px rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.05);
+      0 0 0 12px #FFCC00,
+      0 0 0 16px rgba(0,0,0,0.4),
+      inset 0 0 40px rgba(0,0,0,0.4);
+    border: none;
   }
 
   /* ── Player avatar ── */
   .player-avatar {
     @apply rounded-full flex items-center justify-center font-display text-white
-           border border-white/20 shadow-xl select-none relative overflow-hidden;
+           border-4 border-white shadow-xl select-none relative overflow-hidden;
     background-clip: padding-box;
-  }
-  .player-avatar::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-    border-radius: 50%;
   }
   .player-avatar.active {
     animation: avatarPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

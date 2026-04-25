@@ -95,10 +95,10 @@ export default function Hand() {
               <motion.div
                 key={card.id}
                 layout
-                initial={{ y: 80, opacity: 0, rotate: -5 }}
-                animate={{ y: 0, opacity: 1, rotate: 0 }}
-                exit={{ y: -40, opacity: 0, scale: 0.8 }}
-                transition={{ delay: i * 0.03, duration: 0.3, type: 'spring', damping: 20 }}
+                initial={{ y: -300, x: 0, opacity: 0, scale: 0.2, rotate: -180 }}
+                animate={{ y: 0, opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ y: -100, opacity: 0, scale: 0.5 }}
+                transition={{ delay: i * 0.05, duration: 0.4, type: 'spring', damping: 15 }}
                 style={{ marginLeft: i === 0 ? 0 : -overlap, zIndex: isSelected ? 50 : i + 1 }}
               >
                 <CardComponent

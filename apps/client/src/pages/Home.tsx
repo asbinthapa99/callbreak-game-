@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { socket } from '../socket/client.js';
@@ -14,17 +15,15 @@ export default function Home() {
   const [loading, setLoading] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Check file type
+
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
       return;
     }
-    
-    // Check file size (max 5MB)
+
     if (file.size > 5 * 1024 * 1024) {
       setError('Image must be less than 5MB');
       return;
@@ -34,7 +33,6 @@ export default function Home() {
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Resize to max 128x128
         const canvas = document.createElement('canvas');
         const MAX_SIZE = 128;
         let width = img.width;
@@ -99,90 +97,82 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden px-3 py-5">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(20,83,45,0.42),rgba(2,6,23,0.96)_68%)]" />
+      <div className="absolute inset-x-4 top-10 bottom-16 rounded-[42%] border-[12px] border-cb-gold/20 bg-emerald-950/40 shadow-[0_40px_120px_rgba(0,0,0,0.75),inset_0_0_80px_rgba(0,0,0,0.65)]" />
       <motion.div
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="relative z-10 w-full max-w-md"
       >
-        {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="font-display text-6xl text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.8)] tracking-wide">
+        <div className="text-center mb-5">
+          <h1 className="font-display text-5xl sm:text-6xl text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.8)] tracking-wide">
             CALLBREAK
           </h1>
           <div className="flex items-center justify-center gap-2 mt-1">
             <span className="text-cb-gold font-display text-xl">★</span>
-            <span className="text-cb-gold font-display text-xl tracking-widest">MULTIPLAYER</span>
+            <span className="text-cb-gold font-display text-lg sm:text-xl tracking-widest">MULTIPLAYER</span>
             <span className="text-cb-gold font-display text-xl">★</span>
           </div>
-          {!connected && (
-            <div className="mt-2 text-white/60 font-body text-sm animate-pulse">
-              Connecting to server...
-            </div>
-          )}
+          <div className={`mt-2 font-body text-xs ${connected ? 'text-green-300' : 'text-yellow-200 animate-pulse'}`}>
+            {connected ? 'Online rooms ready' : 'Connecting to server...'}
+          </div>
         </div>
 
-        {/* Panel */}
-        <div className="panel space-y-4">
-          <div className="flex flex-col items-center mb-6">
-            <label className="cursor-pointer group relative">
-              <div className="w-24 h-24 rounded-full border-4 border-cb-gold/50 bg-black/40 overflow-hidden flex items-center justify-center transition-colors group-hover:border-cb-gold">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-white/30 text-3xl font-display">
-                    {name ? name[0].toUpperCase() : '?'}
-                  </div>
+        <div className="rounded-2xl border-2 border-cb-gold/45 bg-black/55 p-4 shadow-2xl backdrop-blur-md sm:p-5">
+          <div className="flex items-center gap-3">
+            <label className="cursor-pointer group relative flex-shrink-0">
+              <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-cb-gold/70 bg-black/50 flex items-center justify-center transition-colors group-hover:border-cb-gold">
+                {avatarUrl ? <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" /> : (
+                  <span className="text-white/50 text-2xl font-display">{name ? name[0].toUpperCase() : '?'}</span>
                 )}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span className="text-white font-body text-xs text-center leading-tight">Upload<br/>Avatar</span>
-                </div>
+                <span className="absolute inset-0 grid place-items-center bg-black/65 text-[10px] font-bold uppercase text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  Avatar
+                </span>
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             </label>
-          </div>
 
-          <div>
-            <label className="block text-cb-gold font-display mb-2 text-sm tracking-wide uppercase">
-              Your Name
-            </label>
-            <input
-              className="input-field w-full"
-              placeholder="Enter your name"
-              value={name}
-              maxLength={16}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
-            />
+            <div className="min-w-0 flex-1">
+              <label className="block text-cb-gold font-display mb-1 text-xs tracking-wide uppercase">
+                Your Name
+              </label>
+              <input
+                className="input-field w-full"
+                placeholder="Enter name"
+                value={name}
+                maxLength={16}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+              />
+            </div>
           </div>
 
           {error && (
-            <div className="text-red-300 font-body text-sm text-center bg-red-900/50 rounded-lg px-3 py-2">
+            <div className="mt-3 text-red-200 font-body text-sm text-center bg-red-900/70 border border-red-400/30 rounded-lg px-3 py-2">
               {error}
             </div>
           )}
 
-          {/* Create Room */}
           <button
-            className="btn-gold w-full text-xl py-4"
+            className="btn-gold mt-4 w-full text-xl py-4"
             onClick={handleCreate}
             disabled={loading !== null || !connected}
           >
             {loading === 'create' ? 'Creating...' : '⚔ Create Room'}
           </button>
 
-          <div className="relative flex items-center gap-3">
+          <div className="relative my-4 flex items-center gap-3">
             <div className="flex-1 h-px bg-white/20" />
             <span className="text-white/50 font-body text-sm">OR</span>
             <div className="flex-1 h-px bg-white/20" />
           </div>
 
-          {/* Join Room */}
           <div className="flex gap-2">
             <input
               className="input-field flex-1 text-center uppercase tracking-[0.3em] text-xl font-display"
-              placeholder="ROOM CODE"
+              placeholder="CODE"
               value={joinCode}
               maxLength={4}
               onChange={e => setJoinCode(e.target.value.toUpperCase())}
@@ -197,10 +187,6 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        <p className="text-center text-white/40 font-body text-xs mt-6">
-          No signup needed · Share room code with friends
-        </p>
       </motion.div>
     </div>
   );
