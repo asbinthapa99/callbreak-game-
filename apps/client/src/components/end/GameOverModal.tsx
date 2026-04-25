@@ -203,20 +203,37 @@ export default function GameOverModal() {
           )}
 
           {/* Action */}
-          {isHost ? (
+          <div className="space-y-3 mt-6">
+            {isHost ? (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="btn-gold w-full text-xl py-4"
+                onClick={() => { sounds.buttonClick(); socket.emit('game:rematch'); }}
+              >
+                🔄 Play Again
+              </motion.button>
+            ) : (
+              <div className="text-white/50 font-body text-sm animate-pulse py-2">
+                Waiting for host to start a new game...
+              </div>
+            )}
+            
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="btn-gold w-full text-xl py-4"
-              onClick={() => { sounds.buttonClick(); socket.emit('game:rematch'); }}
+              className="btn-outline w-full border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white py-3 text-lg"
+              onClick={() => {
+                sounds.buttonClick();
+                if (window.confirm('Are you sure you want to leave the room?')) {
+                  useRoomStore.getState().clearRoom();
+                  window.location.href = '/';
+                }
+              }}
             >
-              🔄 Play Again
+              🚪 Leave Room
             </motion.button>
-          ) : (
-            <div className="text-white/50 font-body text-sm animate-pulse py-2">
-              Waiting for host to start a new game...
-            </div>
-          )}
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
