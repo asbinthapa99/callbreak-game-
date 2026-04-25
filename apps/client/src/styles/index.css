@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #7B1818;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 14px,
+        rgba(0,0,0,0.12) 14px,
+        rgba(0,0,0,0.12) 15px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 14px,
+        rgba(0,0,0,0.12) 14px,
+        rgba(0,0,0,0.12) 15px
+      );
+    min-height: 100vh;
+    color: white;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root { min-height: 100vh; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: #F5C518; border-radius: 3px; }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-gold {
+    @apply font-display font-bold uppercase tracking-wider cursor-pointer
+           select-none transition-all duration-150 active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(180deg, #FFD740 0%, #F5C518 50%, #D4A017 100%);
+    border: 3px solid #A07800;
+    border-radius: 12px;
+    color: #1a0e00;
+    box-shadow: 0 4px 0 #8B6200, 0 6px 12px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .btn-gold:hover:not(:disabled) {
+    background: linear-gradient(180deg, #FFE066 0%, #FFD740 50%, #E5B800 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #8B6200, 0 8px 16px rgba(0,0,0,0.4);
+  }
+  .btn-gold:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8B6200, 0 4px 8px rgba(0,0,0,0.3);
+  }
+
+  .btn-outline {
+    @apply font-display font-bold uppercase tracking-wider cursor-pointer
+           border-2 border-cb-gold rounded-xl text-cb-gold
+           hover:bg-cb-gold hover:text-gray-900 transition-all duration-150
+           active:scale-95 select-none;
+  }
+
+  .btn-red {
+    @apply font-display font-bold uppercase tracking-wider cursor-pointer
+           select-none transition-all duration-150 active:scale-95;
+    background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+    border: 2px solid #7f1d1d;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 0 3px 0 #7f1d1d;
+  }
+
+  /* ── Inputs ── */
+  .input-field {
+    @apply w-full font-body text-base text-white placeholder-white/40
+           transition-colors duration-150;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(245,197,24,0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #F5C518;
+    background: rgba(0,0,0,0.4);
+  }
+  .input-field option { background: #3b0f0f; color: white; }
+
+  /* ── Panels ── */
+  .panel {
+    background: rgba(0,0,0,0.35);
+    border: 2px solid rgba(245,197,24,0.35);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* ── Score bubble ── */
+  .score-bubble {
+    @apply font-display font-bold text-white flex items-center justify-center
+           rounded-full border-2 border-white/30;
+    background: linear-gradient(180deg, #ff9f1a 0%, #e07800 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 12px;
+    padding: 0 4px;
+  }
+
+  /* ── Felt table ── */
+  .felt-table {
+    background: radial-gradient(ellipse at 40% 35%, #3a8c65 0%, #2D6A4F 45%, #1B4332 100%);
+    box-shadow:
+      0 0 0 6px #F5C518,
+      0 0 0 10px #A07800,
+      0 0 0 14px #3d2000,
+      0 20px 60px rgba(0,0,0,0.7),
+      inset 0 4px 30px rgba(0,0,0,0.25);
+  }
+
+  /* ── Player avatar ── */
+  .player-avatar {
+    @apply rounded-full flex items-center justify-center font-display text-white
+           border-2 border-white/20 shadow-lg select-none;
+  }
+  .player-avatar.active {
+    animation: avatarPulse 1.4s ease-in-out infinite;
+  }
+
+  /* ── Trick winner flash ── */
+  .trick-winner-flash {
+    animation: winnerFlash 0.6s ease-out;
+  }
+
+  /* ── Bid badge ── */
+  .bid-badge {
+    @apply font-mono font-bold text-white text-xs rounded-full
+           flex items-center justify-center;
+    background: linear-gradient(180deg, #ff9f1a 0%, #e07800 100%);
+    border: 2px solid rgba(255,255,255,0.3);
+    min-width: 32px;
+    height: 20px;
+    padding: 0 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  /* ── Status dots ── */
+  .status-dot-online  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .status-dot-offline { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+}
+
+/* ── Keyframes ── */
+@keyframes avatarPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7), 0 4px 12px rgba(0,0,0,0.4); }
+  50%       { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0), 0 4px 12px rgba(0,0,0,0.4); }
+}
+
+@keyframes winnerFlash {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.15); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes cardDealIn {
+  from { transform: translateY(-60px) scale(0.7) rotate(-8deg); opacity: 0; }
+  to   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.animate-slide-in-up   { animation: slideInUp 0.4s ease-out; }
+.animate-scale-in      { animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-fade-in       { animation: fadeIn 0.3s ease-out; }
+.animate-card-deal-in  { animation: cardDealIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-timer-pulse   { animation: timerPulse 0.8s ease-in-out infinite; }

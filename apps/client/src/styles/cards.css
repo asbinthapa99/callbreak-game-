@@ -1,0 +1,183 @@
+/* ── Card base ── */
+.card {
+  position: relative;
+  width: 62px;
+  height: 92px;
+  border-radius: 8px;
+  background: #FFFEF8;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
+  user-select: none;
+  flex-shrink: 0;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s ease,
+              filter 0.15s ease;
+  cursor: default;
+}
+
+.card-sm {
+  width: 50px;
+  height: 74px;
+  border-radius: 6px;
+}
+
+/* Selectable hover lift */
+.card.card-selectable {
+  cursor: pointer;
+}
+.card.card-selectable:hover {
+  transform: translateY(-18px) scale(1.06);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 0 2px #F5C518;
+  z-index: 20;
+  filter: brightness(1.05);
+}
+
+/* Selected state */
+.card.card-selected {
+  transform: translateY(-22px) scale(1.08);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,0.5),
+    0 0 0 3px #FFD740,
+    0 0 20px rgba(245,197,24,0.5);
+  z-index: 30;
+  filter: brightness(1.08);
+}
+
+/* Disabled (can't play this card) */
+.card.card-disabled {
+  filter: grayscale(60%) brightness(0.7);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.card.card-disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  filter: grayscale(60%) brightness(0.7);
+}
+
+/* ── Card face elements ── */
+.card-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+}
+
+.card-corner .rank {
+  font-size: 13px;
+  letter-spacing: -0.5px;
+}
+.card-corner .suit-icon {
+  font-size: 10px;
+  margin-top: -1px;
+}
+
+.card-corner.tl { top: 4px; left: 5px; }
+.card-corner.br { bottom: 4px; right: 5px; transform: rotate(180deg); }
+
+.card-center-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.card-face-letter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka One', cursive;
+  font-size: 28px;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* ── Suit colours ── */
+.suit-red   { color: #DC2626; }
+.suit-black { color: #111111; }
+
+/* ── Card back ── */
+.card-back {
+  width: 62px;
+  height: 92px;
+  border-radius: 8px;
+  border: 1px solid #C2185B;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  overflow: hidden;
+  position: relative;
+  background: #E91E8C;
+  flex-shrink: 0;
+}
+.card-back-sm {
+  width: 50px;
+  height: 74px;
+}
+.card-back::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.35) 0,
+      rgba(255,255,255,0.35) 4px,
+      transparent 4px,
+      transparent 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255,255,255,0.35) 0,
+      rgba(255,255,255,0.35) 4px,
+      transparent 4px,
+      transparent 10px
+    );
+}
+
+/* ── Player hand (bottom) ── */
+.player-hand {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 8px 0;
+}
+
+.player-hand .card {
+  margin-left: -20px;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s ease,
+              z-index 0s;
+}
+.player-hand .card:first-child { margin-left: 0; }
+
+/* Push neighbouring cards apart on hover */
+.player-hand .card.card-selectable:hover ~ .card {
+  transform: translateX(12px);
+}
+
+/* ── Trick center card positions ── */
+.trick-card-south { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.trick-card-east  { top: 50%; right: 4px; transform: translateY(-50%); }
+.trick-card-north { top: 4px; left: 50%; transform: translateX(-50%); }
+.trick-card-west  { top: 50%; left: 4px; transform: translateY(-50%); }
+
+/* ── Fan for opponent hand ── */
+.hand-fan {
+  position: relative;
+  width: 62px;
+  height: 56px;
+}
+.hand-fan .card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: bottom center;
+}
