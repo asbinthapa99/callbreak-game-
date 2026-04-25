@@ -6,6 +6,7 @@ export interface Player {
   id: string;        // socket id (changes on reconnect)
   sessionId: string; // stable UUID stored in localStorage
   name: string;
+  avatarUrl?: string;
   seat: Seat;
   isHost: boolean;
   isBot: boolean;

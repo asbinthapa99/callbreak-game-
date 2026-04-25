@@ -50,7 +50,7 @@ export default function PlayerSeat({ playerSeat, position }: PlayerSeatProps) {
       {/* Avatar */}
       <div className="relative">
         <motion.div
-          className={`player-avatar w-14 h-14 text-xl font-display select-none
+          className={`player-avatar w-14 h-14 text-xl font-display select-none overflow-hidden
                       border-4 ${isActive || isBidding ? 'border-green-400' : 'border-white/20'}`}
           style={{ backgroundColor: AVATAR_COLORS[playerSeat] }}
           animate={isActive || isBidding ? {
@@ -62,7 +62,11 @@ export default function PlayerSeat({ playerSeat, position }: PlayerSeatProps) {
           } : { boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
           transition={{ duration: 1.4, repeat: isActive || isBidding ? Infinity : 0 }}
         >
-          {player.name[0]?.toUpperCase()}
+          {player.avatarUrl ? (
+            <img src={player.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            player.name[0]?.toUpperCase()
+          )}
         </motion.div>
 
         {/* Online/offline dot */}

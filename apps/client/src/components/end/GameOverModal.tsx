@@ -130,10 +130,14 @@ export default function GameOverModal() {
           >
             <div className="flex items-center justify-center gap-3">
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center font-display text-white text-xl border-4 border-cb-gold"
+                className="w-12 h-12 rounded-full flex items-center justify-center font-display text-white text-xl border-4 border-cb-gold overflow-hidden"
                 style={{ backgroundColor: AVATAR_COLORS[winnerSeat] }}
               >
-                {winner?.name[0]?.toUpperCase()}
+                {winner?.avatarUrl ? (
+                  <img src={winner.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  winner?.name[0]?.toUpperCase()
+                )}
               </div>
               <div>
                 <div className="text-cb-gold font-display text-sm tracking-wider uppercase">Winner</div>
@@ -160,10 +164,14 @@ export default function GameOverModal() {
                   <div className="flex items-center gap-2.5">
                     <span className="text-base">{RANK_ICONS[i]}</span>
                     <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center font-display text-white text-xs border-2 border-white/20"
+                      className="w-7 h-7 rounded-full flex items-center justify-center font-display text-white text-xs border-2 border-white/20 overflow-hidden"
                       style={{ backgroundColor: AVATAR_COLORS[seat] }}
                     >
-                      {p?.name[0]?.toUpperCase()}
+                      {p?.avatarUrl ? (
+                        <img src={p.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        p?.name[0]?.toUpperCase()
+                      )}
                     </div>
                     <div className="text-left">
                       <span className="text-white font-body font-bold text-sm">{p?.name}</span>
@@ -190,10 +198,14 @@ export default function GameOverModal() {
               <div className="text-red-300 font-display text-base tracking-wide">😅 Loser's Penalty</div>
               <div className="flex items-center justify-center gap-2">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center font-display text-white text-sm border-2 border-red-400"
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-display text-white text-sm border-2 border-red-400 overflow-hidden"
                   style={{ backgroundColor: AVATAR_COLORS[loserSeat] }}
                 >
-                  {loser?.name[0]?.toUpperCase()}
+                  {loser?.avatarUrl ? (
+                    <img src={loser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    loser?.name[0]?.toUpperCase()
+                  )}
                 </div>
                 <span className="text-white font-body font-bold">{loser?.name}</span>
                 <span className="text-red-300 text-sm">must:</span>

@@ -41,10 +41,16 @@ export default function PlayerSlot({ seat, player, isYou, canKick, onKick, onAdd
       ${player.isBot ? 'bg-white/5 border-white/20' : 'bg-white/10 border-cb-gold/30'}`}>
       <div
         className="w-12 h-12 rounded-full flex items-center justify-center font-display flex-shrink-0
-                   text-xl border-2 border-white/20"
+                   text-xl border-2 border-white/20 overflow-hidden"
         style={{ backgroundColor: AVATAR_COLORS[seat] }}
       >
-        {player.isBot ? BOT_EMOJIS[seat] : player.name[0]?.toUpperCase()}
+        {!player.isBot && player.avatarUrl ? (
+          <img src={player.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+        ) : player.isBot ? (
+          BOT_EMOJIS[seat]
+        ) : (
+          player.name[0]?.toUpperCase()
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-white font-body font-bold text-base truncate">

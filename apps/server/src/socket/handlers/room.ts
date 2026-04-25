@@ -34,7 +34,7 @@ function sanitizeConfigUpdate(config: Partial<typeof DEFAULT_CONFIG>): Partial<t
 }
 
 export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
-  socket.on('room:create', ({ name, sessionId, config }, ack) => {
+  socket.on('room:create', ({ name, sessionId, avatarUrl, config }, ack) => {
     if (!name?.trim() || name.length > 16) {
       ack({ ok: false, error: 'Name must be 1–16 characters' });
       return;
@@ -51,6 +51,7 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
       isHost: true,
       isBot: false,
       connected: true,
+      avatarUrl,
       hand: [],
     });
 
@@ -63,7 +64,7 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
     logger.info(`Room created: ${room.code} by ${name}`);
   });
 
-  socket.on('room:join', ({ code, name, sessionId }, ack) => {
+  socket.on('room:join', ({ code, name, sessionId, avatarUrl }, ack) => {
     if (!name?.trim() || name.length > 16) {
       ack({ ok: false, error: 'Name must be 1–16 characters' });
       return;
@@ -98,6 +99,7 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
       isHost: false,
       isBot: false,
       connected: true,
+      avatarUrl,
       hand: [],
     });
 

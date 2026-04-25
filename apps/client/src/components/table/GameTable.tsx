@@ -224,12 +224,16 @@ export default function GameTable() {
             <div className="flex items-center justify-between mt-4 px-2">
               <div className="flex items-center gap-3">
                 <motion.div
-                  className={`player-avatar w-12 h-12 text-xl flex-shrink-0 ${isMyTurn && game.phase === 'playing' ? 'active' : ''}`}
+                  className={`player-avatar w-12 h-12 text-xl flex-shrink-0 overflow-hidden ${isMyTurn && game.phase === 'playing' ? 'active' : ''}`}
                   style={{ backgroundColor: AVATAR_COLORS[yourSeat] }}
                   animate={isMyTurn ? { scale: [1, 1.08, 1] } : {}}
                   transition={{ duration: 1.2, repeat: Infinity }}
                 >
-                  {myPlayer?.name[0]?.toUpperCase()}
+                  {myPlayer?.avatarUrl ? (
+                    <img src={myPlayer.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    myPlayer?.name[0]?.toUpperCase()
+                  )}
                 </motion.div>
                 <div>
                   <div className="font-body font-bold text-white text-sm leading-tight">

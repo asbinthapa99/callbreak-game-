@@ -6,12 +6,12 @@ export type AckResult<T = Record<string, never>> =
 
 export interface ClientToServerEvents {
   'room:create': (
-    payload: { name: string; sessionId: string; config: Partial<RoomConfig> },
+    payload: { name: string; sessionId: string; avatarUrl?: string; config: Partial<RoomConfig> },
     ack: (r: AckResult<{ code: string }>) => void
   ) => void;
 
   'room:join': (
-    payload: { code: string; name: string; sessionId: string },
+    payload: { code: string; name: string; sessionId: string; avatarUrl?: string },
     ack: (r: AckResult<{ seat: number }>) => void
   ) => void;
 

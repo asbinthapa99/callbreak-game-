@@ -60,11 +60,15 @@ export default function Scoreboard({ open, onClose }: ScoreboardProps) {
                   return (
                     <div key={s} className="flex flex-col items-center gap-1">
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center font-display text-white text-xs
+                        className={`w-7 h-7 rounded-full flex items-center justify-center font-display text-white text-xs overflow-hidden
                                     border-2 ${isYou ? 'border-cb-gold' : 'border-white/20'}`}
                         style={{ backgroundColor: AVATAR_COLORS[s] }}
                       >
-                        {p?.name[0]?.toUpperCase() ?? '?'}
+                        {p?.avatarUrl ? (
+                          <img src={p.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          p?.name[0]?.toUpperCase() ?? '?'
+                        )}
                       </div>
                       <div className={`font-body text-[10px] truncate max-w-[52px] text-center
                                        ${isYou ? 'text-cb-gold font-bold' : 'text-white/60'}`}>

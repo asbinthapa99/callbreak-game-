@@ -88,6 +88,18 @@ callbreak/
 - Zustand stores keep session and room state in sync with socket events.
 - Tailwind-based UI renders lobby, hand, trick area, scoreboard, timer, chat, and end-game modal.
 
+### UI Direction
+
+- Browser-based, app-like, multiplayer-first experience
+- Direct table-first flow with minimal friction between landing and gameplay
+- Full-screen multiplayer room with the table as the primary surface
+- Fixed player positions: top, left, right opponents and your hand at the bottom
+- Strong real-time feedback: active turn glow, card animations, bid updates, trick win highlight
+- Compact secondary controls for room code, chat, settings, and rules
+- Faster room flow: enter name, create or join, move into the room immediately
+- Mobile browser optimization so the game feels closer to a native multiplayer card app
+- Game-first landing page similar to real browser Callbreak rooms rather than a generic website layout
+
 ### Server
 
 - Express exposes `GET /health`.
@@ -291,6 +303,28 @@ Main chat events:
 - Realtime communication is socket-first.
 - Shared rules live in `packages/shared` to keep client/server behavior aligned.
 - Room expiry runs on an interval and removes inactive rooms.
+
+## Logic Approach
+
+Current logic that already fits a browser multiplayer Callbreak game well:
+
+- Socket.IO real-time multiplayer
+- Room-based play
+- Shared game rules package
+- Server-authoritative turns and actions
+- Bidding, trick play, and scoring flow
+- Bot fill for empty seats
+- Timeout handling
+- Rematch flow
+
+Main logic improvements to prioritize next:
+
+- Reconnect and session recovery so refreshes and network drops do not break the match
+- Room persistence beyond in-memory runtime
+- Stronger start-game and seat validation
+- Host transfer or better disconnect handling
+- Anti-desync protections with the server remaining the full source of truth
+- Rejoin or spectator support for interrupted games
 
 ## Current Limitations
 
