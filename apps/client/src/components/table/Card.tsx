@@ -64,6 +64,7 @@ export function CardBack({ count = 1, fan = false, size = 'md' }: { count?: numb
             key={i}
             className={`card-back ${sm ? 'card-back-sm' : ''} absolute`}
             style={{
+              position: 'absolute',
               left: i * 8,
               top: 0,
               transform: `rotate(${angle}deg)`,
