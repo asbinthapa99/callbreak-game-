@@ -8,15 +8,14 @@ import { registerConnectionHandlers } from './socket/handlers/connection.js';
 import { registerRoomHandlers } from './socket/handlers/room.js';
 import { registerGameHandlers } from './socket/handlers/game.js';
 import { registerChatHandlers } from './socket/handlers/chat.js';
-import { PORT, CORS_ORIGIN } from './config.js';
+import { PORT } from './config.js';
 import { logger } from './lib/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDistDir = path.resolve(__dirname, '../../client/dist');
-const corsOptions = CORS_ORIGIN ? { origin: CORS_ORIGIN } : undefined;
 
 const app = express();
-app.use(cors(corsOptions));
+app.use(cors({ origin: true }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
