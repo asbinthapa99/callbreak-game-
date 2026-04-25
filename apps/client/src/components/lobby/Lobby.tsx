@@ -40,8 +40,19 @@ export default function Lobby() {
         animate={{ y: 0, opacity: 1 }}
         className="w-full max-w-lg space-y-5"
       >
-        {/* Title */}
-        <div className="text-center">
+        {/* Title & Navigation */}
+        <div className="relative text-center">
+          <button
+            onClick={() => {
+              if (window.confirm('Leave the room?')) {
+                useRoomStore.getState().clearRoom();
+                window.location.href = '/';
+              }
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1 text-white/50 hover:text-red-400 font-body text-sm transition-colors"
+          >
+            ← Leave
+          </button>
           <h1 className="font-display text-5xl text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.8)]">
             CALLBREAK
           </h1>

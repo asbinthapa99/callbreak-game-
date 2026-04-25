@@ -104,6 +104,19 @@ export default function GameTable() {
         <div className="flex items-center justify-between px-3 py-2 z-20">
           <div className="flex gap-2">
             <button
+              onClick={() => {
+                sounds.buttonClick();
+                if (window.confirm('Are you sure you want to leave the game?')) {
+                  useRoomStore.getState().clearRoom();
+                  window.location.href = '/';
+                }
+              }}
+              className="flex items-center gap-1.5 btn-outline border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 text-sm"
+              title="Exit Game"
+            >
+              🚪 <span className="hidden sm:inline">Exit</span>
+            </button>
+            <button
               onClick={() => { setScoreboardOpen(true); sounds.buttonClick(); }}
               className="flex items-center gap-1.5 bg-black/30 hover:bg-black/50 border border-cb-gold/40
                          rounded-xl px-3 py-1.5 text-cb-gold font-body text-sm font-bold transition-colors"
