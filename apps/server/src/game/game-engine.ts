@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import {
   createDeck, shuffle, dealHands,
   getLegalPlays, winnerOfTrick, isSpadesBroken,
@@ -9,6 +8,7 @@ import type { Room, Seat, Card, Suit } from '@callbreak/shared';
 import type { RoundState } from '@callbreak/shared';
 import { botBid, botPlay } from './ai-bot.js';
 import { logger } from '../lib/logger.js';
+import { fillEmptySeatsWithBots } from './seating.js';
 
 type Emit = (room: Room) => void;
 const turnTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -61,29 +61,9 @@ function initRound(room: Room, roundIndex: number): RoundState {
   };
 }
 
-const BOT_NAMES = ['Arjun', 'Priya', 'Rajan', 'Sita', 'Dev', 'Meena'];
-
 export function startGame(room: Room, emit: Emit): void {
   if (room.config.fillWithBots) {
-    // Fill remaining empty seats with bots (skip seats already occupied by manually-added bots)
-    const occupied = new Set(room.players.map(p => p.seat));
-    const usedNames = new Set(room.players.map(p => p.name));
-    for (const s of allSeats()) {
-      if (!occupied.has(s)) {
-        const botName = BOT_NAMES.find(n => !usedNames.has(n)) ?? `Bot${s + 1}`;
-        usedNames.add(botName);
-        room.players.push({
-          id: uuidv4(),
-          sessionId: uuidv4(),
-          name: botName,
-          seat: s,
-          isHost: false,
-          isBot: true,
-          connected: true,
-          hand: [],
-        });
-      }
-    }
+    fillEmptySeatsWithBots(room);
   }
 
   room.game.scores = [];

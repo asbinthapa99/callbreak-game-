@@ -34,7 +34,20 @@ export default function Lobby() {
     });
   }
 
-  const allSeats: Seat[] = [0, 1, 2, 3];
+  function handleFillBots() {
+    socket.emit('room:fillBots', (result) => {
+      if (!result.ok) {
+        showToast({ kind: 'error', message: result.error });
+        return;
+      }
+
+      showToast({
+        kind: 'info',
+        message: result.data.added > 0 ? `Added ${result.data.added} bot${result.data.added === 1 ? '' : 's'}` : 'All seats are already filled',
+      });
+    });
+  }
+
   const seatedCount = players.length;
 
   return (
@@ -143,10 +156,7 @@ export default function Lobby() {
 
             {isHost && players.length < 4 && (
               <button
-                onClick={() => {
-                  const emptySeats = allSeats.filter(s => !players.some(p => p.seat === s));
-                  emptySeats.forEach(s => handleAddBot(s));
-                }}
+                onClick={handleFillBots}
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cb-gold/50 bg-black/55 px-4 py-2 font-body text-sm font-bold text-cb-gold backdrop-blur-md transition-colors hover:bg-cb-gold hover:text-black"
               >
                 Fill Bots

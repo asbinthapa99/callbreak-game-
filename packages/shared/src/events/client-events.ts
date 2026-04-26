@@ -26,6 +26,8 @@ export interface ClientToServerEvents {
 
   'room:addBot': (payload: { seat: number }, ack: (r: AckResult) => void) => void;
 
+  'room:fillBots': (ack: (r: AckResult<{ added: number }>) => void) => void;
+
   'game:start': (ack: (r: AckResult) => void) => void;
 
   'game:bid': (

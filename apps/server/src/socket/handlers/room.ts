@@ -4,9 +4,10 @@ import { createRoom, deleteRoom, getRoom, touchRoom } from '../../game/room-mana
 import { clearSocketSession, getSocketSession, setSocketSession } from './connection.js';
 import { logger } from '../../lib/logger.js';
 import type { Seat } from '@callbreak/shared';
-import { DEFAULT_CONFIG, PLAYER_COUNT } from '@callbreak/shared';
+import { DEFAULT_CONFIG } from '@callbreak/shared';
 import { buildRoomView } from '../../game/view.js';
 import { broadcastRoomState } from './broadcast.js';
+import { fillEmptySeatsWithBots, findSeatForHuman, isSeat, makeBot } from '../../game/seating.js';
 
 const MIN_TURN_TIMEOUT_MS = 5000;
 const MAX_TURN_TIMEOUT_MS = 120000;
@@ -81,15 +82,13 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
       return;
     }
 
-    const humanSeats = room.players.filter(p => !p.isBot).length;
-    if (humanSeats >= PLAYER_COUNT) {
+    const seat = findSeatForHuman(room);
+    if (seat === null) {
       ack({ ok: false, error: 'Room is full' });
       return;
     }
 
-    // Find next free seat
-    const takenSeats = new Set(room.players.map(p => p.seat));
-    const seat = ([0, 1, 2, 3] as Seat[]).find(s => !takenSeats.has(s))!;
+    room.players = room.players.filter(player => !(player.isBot && player.seat === seat));
 
     room.players.push({
       id: socket.id,
@@ -167,6 +166,7 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
     if (!session) return;
     const room = getRoom(session);
     if (!room) return;
+    if (!isSeat(seat)) return;
 
     const hostPlayer = room.players.find(p => p.sessionId === room.hostSessionId);
     if (hostPlayer?.id !== socket.id) return;
@@ -183,30 +183,35 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
     if (!session) { ack({ ok: false, error: 'Not in a room' }); return; }
     const room = getRoom(session);
     if (!room) { ack({ ok: false, error: 'Room not found' }); return; }
+    if (!isSeat(seat)) { ack({ ok: false, error: 'Invalid seat' }); return; }
 
     const hostPlayer = room.players.find(p => p.sessionId === room.hostSessionId);
     if (hostPlayer?.id !== socket.id) { ack({ ok: false, error: 'Only host can add bots' }); return; }
     if (room.game.phase !== 'waiting') { ack({ ok: false, error: 'Game already started' }); return; }
     if (room.players.some(p => p.seat === seat)) { ack({ ok: false, error: 'Seat taken' }); return; }
 
-    const botNames = ['Arjun', 'Priya', 'Rajan', 'Sita', 'Dev', 'Meena'];
     const usedNames = new Set(room.players.map(p => p.name));
-    const botName = botNames.find(n => !usedNames.has(n)) ?? `Bot${seat + 1}`;
-
-    room.players.push({
-      id: `bot-${seat}`,
-      sessionId: `bot-session-${seat}`,
-      name: botName,
-      seat: seat as Seat,
-      isHost: false,
-      isBot: true,
-      connected: true,
-      hand: [],
-    });
+    room.players.push(makeBot(seat, usedNames));
 
     touchRoom(room.code);
     broadcastRoomState(io, room);
     ack({ ok: true, data: {} });
     logger.info(`Bot added to room ${room.code} seat ${seat}`);
+  });
+
+  socket.on('room:fillBots', (ack) => {
+    const session = Array.from(socket.rooms).find(r => r !== socket.id);
+    if (!session) { ack({ ok: false, error: 'Not in a room' }); return; }
+    const room = getRoom(session);
+    if (!room) { ack({ ok: false, error: 'Room not found' }); return; }
+
+    const hostPlayer = room.players.find(p => p.sessionId === room.hostSessionId);
+    if (hostPlayer?.id !== socket.id) { ack({ ok: false, error: 'Only host can add bots' }); return; }
+    if (room.game.phase !== 'waiting') { ack({ ok: false, error: 'Game already started' }); return; }
+
+    const added = fillEmptySeatsWithBots(room);
+    touchRoom(room.code);
+    broadcastRoomState(io, room);
+    ack({ ok: true, data: { added } });
   });
 }

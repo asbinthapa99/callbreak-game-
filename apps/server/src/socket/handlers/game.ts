@@ -5,6 +5,7 @@ import type { Seat } from '@callbreak/shared';
 import { PLAYER_COUNT } from '@callbreak/shared';
 import { logger } from '../../lib/logger.js';
 import { broadcastRoomState } from './broadcast.js';
+import { fillEmptySeatsWithBots, validateSeating } from '../../game/seating.js';
 
 function getPlayerRoom(socket: TypedSocket) {
   const roomCode = Array.from(socket.rooms).find(r => r !== socket.id);
@@ -23,6 +24,16 @@ export function registerGameHandlers(io: TypedIO, socket: TypedSocket): void {
     if (room.game.phase !== 'waiting') { ack({ ok: false, error: 'Game already started' }); return; }
     if (!room.config.fillWithBots && room.players.length < PLAYER_COUNT) {
       ack({ ok: false, error: 'Four seated players are required when auto-fill bots is disabled' });
+      return;
+    }
+
+    if (room.config.fillWithBots) {
+      fillEmptySeatsWithBots(room);
+    }
+
+    const seatingError = validateSeating(room);
+    if (seatingError) {
+      ack({ ok: false, error: seatingError });
       return;
     }
 
