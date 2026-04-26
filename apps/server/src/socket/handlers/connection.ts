@@ -70,3 +70,7 @@ export function getSocketSession(socketId: string) {
 export function setSocketSession(socketId: string, data: { sessionId: string; roomCode: string; seat: Seat }) {
   socketSessions.set(socketId, data);
 }
+
+export function clearSocketSession(socketId: string) {
+  socketSessions.delete(socketId);
+}

@@ -7,6 +7,7 @@ interface SessionState {
   sessionId: string;
   setName: (name: string) => void;
   setAvatarUrl: (url: string) => void;
+  resetSession: () => void;
 }
 
 function getOrCreateSessionId(): string {
@@ -32,5 +33,10 @@ export const useSessionStore = create<SessionState>((set) => ({
   setAvatarUrl: (url) => {
     localStorage.setItem('cb_avatar_url', url);
     set({ avatarUrl: url });
+  },
+  resetSession: () => {
+    const sessionId = uuidv4();
+    localStorage.setItem('cb_session_id', sessionId);
+    set({ sessionId });
   },
 }));

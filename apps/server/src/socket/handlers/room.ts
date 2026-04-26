@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { TypedIO, TypedSocket } from '../server.js';
-import { createRoom, getRoom, touchRoom } from '../../game/room-manager.js';
-import { setSocketSession } from './connection.js';
+import { createRoom, deleteRoom, getRoom, touchRoom } from '../../game/room-manager.js';
+import { clearSocketSession, getSocketSession, setSocketSession } from './connection.js';
 import { logger } from '../../lib/logger.js';
 import type { Seat } from '@callbreak/shared';
 import { DEFAULT_CONFIG, PLAYER_COUNT } from '@callbreak/shared';
@@ -113,7 +113,36 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
   });
 
   socket.on('room:leave', () => {
-    // Handled via disconnect
+    const session = getSocketSession(socket.id);
+    if (!session) return;
+
+    const room = getRoom(session.roomCode);
+    clearSocketSession(socket.id);
+    socket.leave(session.roomCode);
+    if (!room) return;
+
+    const player = room.players.find(p => p.sessionId === session.sessionId);
+    if (!player) return;
+
+    if (room.game.phase === 'waiting') {
+      room.players = room.players.filter(p => p.sessionId !== session.sessionId);
+
+      if (room.players.length === 0) {
+        deleteRoom(room.code);
+        return;
+      }
+
+      if (room.hostSessionId === session.sessionId) {
+        const nextHost = room.players.find(p => !p.isBot) ?? room.players[0];
+        room.hostSessionId = nextHost.sessionId;
+        room.players = room.players.map(p => ({ ...p, isHost: p.sessionId === nextHost.sessionId }));
+      }
+    } else {
+      player.connected = false;
+    }
+
+    touchRoom(room.code);
+    broadcastRoomState(io, room);
   });
 
   socket.on('room:updateConfig', ({ config }, ack) => {

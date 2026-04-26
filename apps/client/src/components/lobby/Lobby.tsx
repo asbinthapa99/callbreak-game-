@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { socket } from '../../socket/client.js';
 import { useRoomStore } from '../../store/room.js';
+import { useSessionStore } from '../../store/session.js';
 import RoomCode from './RoomCode.js';
 import PlayerSlot from './PlayerSlot.js';
 import RoomSettings from './RoomSettings.js';
@@ -48,7 +49,9 @@ export default function Lobby() {
           <button
             onClick={() => {
               if (window.confirm('Leave the room?')) {
+                socket.emit('room:leave');
                 useRoomStore.getState().clearRoom();
+                useSessionStore.getState().resetSession();
                 window.location.href = '/';
               }
             }}

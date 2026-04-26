@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRoomStore } from '../../store/room.js';
+import { useSessionStore } from '../../store/session.js';
+import { socket } from '../../socket/client.js';
 import { cumulativeScores, formatScore } from '@callbreak/shared';
 import type { Seat, Trick } from '@callbreak/shared';
 import PlayerSeat from './PlayerSeat.js';
@@ -116,7 +118,9 @@ export default function GameTable() {
               onClick={() => {
                 sounds.buttonClick();
                 if (window.confirm('Are you sure you want to leave the game?')) {
+                  socket.emit('room:leave');
                   useRoomStore.getState().clearRoom();
+                  useSessionStore.getState().resetSession();
                   window.location.href = '/';
                 }
               }}

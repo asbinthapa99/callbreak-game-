@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { socket } from '../../socket/client.js';
 import { useRoomStore } from '../../store/room.js';
+import { useSessionStore } from '../../store/session.js';
 import { formatScore, cumulativeScores } from '@callbreak/shared';
 import type { Seat } from '@callbreak/shared';
 import { sounds } from '../../lib/sounds.js';
@@ -238,7 +239,9 @@ export default function GameOverModal() {
               onClick={() => {
                 sounds.buttonClick();
                 if (window.confirm('Are you sure you want to leave the room?')) {
+                  socket.emit('room:leave');
                   useRoomStore.getState().clearRoom();
+                  useSessionStore.getState().resetSession();
                   window.location.href = '/';
                 }
               }}
