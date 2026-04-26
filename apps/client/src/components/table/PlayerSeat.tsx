@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import type { Seat } from '@callbreak/shared';
-import { cumulativeScores } from '@callbreak/shared';
+import { cumulativeScores, formatScore } from '@callbreak/shared';
 import { CardBack } from './Card.js';
 import { useRoomStore } from '../../store/room.js';
 
@@ -48,9 +48,9 @@ export default function PlayerSeat({ playerSeat, position }: PlayerSeatProps) {
   const avatarRow = (
     <div className="flex items-center gap-1.5">
       {/* Cumulative score badge (orange) */}
-      <div className="w-8 h-8 rounded-full bg-orange-500 border-2 border-orange-200
-                      flex items-center justify-center font-display font-bold text-white text-sm shadow-lg">
-        {cum}
+      <div className="min-w-[32px] h-8 rounded-full bg-orange-500 border-2 border-orange-200
+                      flex items-center justify-center font-display font-bold text-white text-xs shadow-lg px-1">
+        {formatScore(cum)}
       </div>
 
       {/* Avatar */}
