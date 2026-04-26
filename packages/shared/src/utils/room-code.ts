@@ -1,5 +1,4 @@
-// Excludes 0, O, 1, I, L to avoid confusion
-const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CHARS = '0123456789';
 
 export function generateRoomCode(length = 4): string {
   const buf = new Uint32Array(length);

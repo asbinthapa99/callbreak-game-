@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { socket } from '../socket/client.js';
 import { useSessionStore } from '../store/session.js';
@@ -8,12 +8,13 @@ import { useRoomStore } from '../store/room.js';
 
 export default function Home() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { name, avatarUrl, sessionId, setName, setAvatarUrl } = useSessionStore();
   const { connected } = useRoomStore();
 
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState(searchParams.get('code') ?? '');
   const [loading, setLoading] = useState<'create' | 'join' | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(searchParams.get('error') ?? '');
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,10 +87,10 @@ export default function Home() {
     setError('');
     setLoading('join');
 
-    socket.emit('room:join', { code: joinCode.toUpperCase().trim(), name: name.trim(), sessionId, avatarUrl }, (result) => {
+    socket.emit('room:join', { code: joinCode.trim(), name: name.trim(), sessionId, avatarUrl }, (result) => {
       setLoading(null);
       if (result.ok) {
-        navigate(`/room/${joinCode.toUpperCase().trim()}`);
+        navigate(`/room/${joinCode.trim()}`);
       } else {
         setError(result.error);
       }
@@ -171,11 +172,12 @@ export default function Home() {
 
           <div className="flex gap-2">
             <input
-              className="input-field flex-1 text-center uppercase tracking-[0.3em] text-xl font-display"
-              placeholder="CODE"
+              className="input-field flex-1 text-center tracking-[0.4em] text-xl font-display"
+              placeholder="0000"
               value={joinCode}
               maxLength={4}
-              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+              inputMode="numeric"
+              onChange={e => setJoinCode(e.target.value.replace(/\D/g, ''))}
               onKeyDown={e => e.key === 'Enter' && handleJoin()}
             />
             <button
