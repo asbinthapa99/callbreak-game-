@@ -105,6 +105,16 @@ export default function GameTable() {
     });
   }
 
+  function leaveGame() {
+    sounds.buttonClick();
+    if (!window.confirm('Leave this game?')) return;
+
+    socket.emit('room:leave');
+    useRoomStore.getState().clearRoom();
+    useSessionStore.getState().resetSession();
+    window.location.href = '/';
+  }
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-transparent">
 
@@ -115,15 +125,7 @@ export default function GameTable() {
         <div className="flex items-center justify-between px-3 py-2 z-20">
           <div className="flex gap-2">
             <button
-              onClick={() => {
-                sounds.buttonClick();
-                if (window.confirm('Are you sure you want to leave the game?')) {
-                  socket.emit('room:leave');
-                  useRoomStore.getState().clearRoom();
-                  useSessionStore.getState().resetSession();
-                  window.location.href = '/';
-                }
-              }}
+              onClick={leaveGame}
               className="flex items-center gap-1.5 btn-outline border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 text-sm"
               title="Exit Game"
             >
@@ -162,6 +164,14 @@ export default function GameTable() {
             {isMyTurn && game.phase === 'playing' && (
               <TurnTimer deadline={game.turnDeadline} timeoutMs={config.turnTimeoutMs} />
             )}
+            <button
+              onClick={leaveGame}
+              className="flex items-center gap-1.5 bg-red-950/45 hover:bg-red-600 border border-red-400/50
+                         rounded-xl px-3 py-1.5 text-red-200 hover:text-white font-body text-sm font-bold transition-colors"
+              title="Leave Game"
+            >
+              <span>Leave</span>
+            </button>
             <button
               onClick={() => {
                 setChatOpen(o => !o);

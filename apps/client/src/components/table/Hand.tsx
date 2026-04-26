@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Card } from '@callbreak/shared';
 import { getLegalPlays } from '@callbreak/shared';
@@ -23,7 +23,6 @@ function sortHand(hand: Card[]): Card[] {
 
 export default function Hand() {
   const roomView = useRoomStore(s => s.roomView);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const sorted = useMemo(
     () => roomView ? sortHand(roomView.yourHand) : [],
@@ -52,19 +51,13 @@ export default function Hand() {
       return;
     }
 
-    if (selectedId === card.id) {
-      socket.emit('game:play', { cardId: card.id }, (result) => {
-        if (result.ok) {
-          sounds.cardPlay();
-        } else {
-          sounds.error();
-        }
-      });
-      setSelectedId(null);
-    } else {
-      setSelectedId(card.id);
-      sounds.buttonClick();
-    }
+    socket.emit('game:play', { cardId: card.id }, (result) => {
+      if (result.ok) {
+        sounds.cardPlay();
+      } else {
+        sounds.error();
+      }
+    });
   }
 
   if (sorted.length === 0) return null;
@@ -80,14 +73,13 @@ export default function Hand() {
           animate={{ opacity: 1, y: 0 }}
           className="text-cb-gold font-display text-sm tracking-wide"
         >
-          {selectedId ? '✓ Click again to play!' : '♠ Your turn — pick a card'}
+          Tap a highlighted card to play
         </motion.div>
       )}
 
       <div className="player-hand">
         <AnimatePresence>
           {sorted.map((card, i) => {
-            const isSelected = selectedId === card.id;
             const isLegal = legalIds.has(card.id);
             const isDisabled = isMyTurn && !isLegal;
 
@@ -99,12 +91,11 @@ export default function Hand() {
                 animate={{ y: 0, opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ y: -100, opacity: 0, scale: 0.5 }}
                 transition={{ delay: i * 0.05, duration: 0.4, type: 'spring', damping: 15 }}
-                style={{ marginLeft: i === 0 ? 0 : -overlap, zIndex: isSelected ? 50 : i + 1 }}
+                style={{ marginLeft: i === 0 ? 0 : -overlap, zIndex: i + 1 }}
               >
                 <CardComponent
                   card={card}
                   selectable={isMyTurn && isLegal}
-                  selected={isSelected}
                   disabled={isDisabled}
                   onClick={() => handleCardClick(card)}
                 />
