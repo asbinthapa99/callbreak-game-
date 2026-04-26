@@ -5,12 +5,12 @@ import CardComponent from './Card.js';
 import { useRoomStore } from '../../store/room.js';
 import { sounds } from '../../lib/sounds.js';
 
-// Absolute positions for each display seat's played card
+// Absolute positions for each display seat's played card (tight cross pattern)
 const SLOT: Record<number, React.CSSProperties> = {
-  0: { bottom: 6, left: '50%', transform: 'translateX(-50%)' },   // south
-  1: { top: '50%', right: 4, transform: 'translateY(-50%)' },      // east
-  2: { top: 6, left: '50%', transform: 'translateX(-50%)' },       // north
-  3: { top: '50%', left: 4, transform: 'translateY(-50%)' },       // west
+  0: { bottom: 10, left: '50%', transform: 'translateX(-50%)' },   // south
+  1: { top: '50%', right: 10, transform: 'translateY(-50%)' },     // east
+  2: { top: 10, left: '50%', transform: 'translateX(-50%)' },      // north
+  3: { top: '50%', left: 10, transform: 'translateY(-50%)' },      // west
 };
 
 // Fly-out direction when trick is collected
