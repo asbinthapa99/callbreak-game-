@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Room, Player, Seat } from '@callbreak/shared';
 import { DEFAULT_CONFIG } from '@callbreak/shared';
-import { startGame, rematch } from './game-engine.js';
+import { SHUFFLE_ANIMATION_MS, startGame, placeBid, rematch } from './game-engine.js';
 
 function makePlayer(seat: Seat, overrides: Partial<Player> = {}): Player {
   return {
@@ -35,6 +35,7 @@ afterEach(() => {
 
 describe('game engine', () => {
   it('fills empty seats with bots when fillWithBots is enabled', () => {
+    vi.useFakeTimers();
     const room = makeRoom({ fillWithBots: true }, [makePlayer(0), makePlayer(1)]);
 
     startGame(room, vi.fn());
@@ -53,6 +54,7 @@ describe('game engine', () => {
     );
 
     startGame(room, emit);
+    vi.advanceTimersByTime(SHUFFLE_ANIMATION_MS);
 
     const currentSeat = room.game.currentTurnSeat;
     expect(currentSeat).not.toBeNull();
@@ -62,6 +64,23 @@ describe('game engine', () => {
 
     expect(room.game.round?.bids[currentSeat as Seat]).toBe(1);
     expect(emit).toHaveBeenCalled();
+  });
+
+  it('rejects malformed bids before they can affect scoring', () => {
+    vi.useFakeTimers();
+
+    const emit = vi.fn();
+    const room = makeRoom(
+      { fillWithBots: true },
+      [makePlayer(0), makePlayer(1), makePlayer(2), makePlayer(3)],
+    );
+
+    startGame(room, emit);
+    vi.advanceTimersByTime(SHUFFLE_ANIMATION_MS);
+
+    const currentSeat = room.game.currentTurnSeat as Seat;
+    expect(placeBid(room, currentSeat, Number.NaN, emit)).toBe('Invalid bid');
+    expect(room.game.round?.bids[currentSeat]).toBeNull();
   });
 
   it('rematch resets the game back to waiting state', () => {

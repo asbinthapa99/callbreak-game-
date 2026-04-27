@@ -45,7 +45,7 @@ export function registerConnectionHandlers(io: TypedIO, socket: TypedSocket): vo
     if (!room) return;
 
     const player = room.players.find(p => p.sessionId === session.sessionId);
-    if (player) {
+    if (player && player.id === socket.id) {
       player.connected = false;
       logger.info(`Player disconnected: ${player.name} from room ${room.code}`);
       touchRoom(room.code);

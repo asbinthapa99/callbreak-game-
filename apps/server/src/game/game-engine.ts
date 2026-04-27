@@ -2,7 +2,7 @@ import {
   createDeck, shuffle, dealHands,
   getLegalPlays, winnerOfTrick, isSpadesBroken,
   scoreRound, cumulativeScores,
-  TOTAL_ROUNDS, PLAYER_COUNT, MIN_BID, MAX_BID,
+  PLAYER_COUNT, MIN_BID, MAX_BID,
 } from '@callbreak/shared';
 import type { Room, Seat, Card, Suit } from '@callbreak/shared';
 import type { RoundState } from '@callbreak/shared';
@@ -12,6 +12,10 @@ import { fillEmptySeatsWithBots } from './seating.js';
 
 type Emit = (room: Room) => void;
 const turnTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const dealTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const botActionTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const roundAdvanceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+export const SHUFFLE_ANIMATION_MS = 1800;
 
 // nextSeat anti-clockwise (decrement mod 4)
 function prevSeat(seat: Seat): Seat {
@@ -26,6 +30,37 @@ function clearTurnTimer(roomCode: string): void {
     clearTimeout(timer);
     turnTimers.delete(roomCode);
   }
+}
+
+function clearDealTimer(roomCode: string): void {
+  const timer = dealTimers.get(roomCode);
+  if (timer) {
+    clearTimeout(timer);
+    dealTimers.delete(roomCode);
+  }
+}
+
+function clearBotActionTimer(roomCode: string): void {
+  const timer = botActionTimers.get(roomCode);
+  if (timer) {
+    clearTimeout(timer);
+    botActionTimers.delete(roomCode);
+  }
+}
+
+function clearRoundAdvanceTimer(roomCode: string): void {
+  const timer = roundAdvanceTimers.get(roomCode);
+  if (timer) {
+    clearTimeout(timer);
+    roundAdvanceTimers.delete(roomCode);
+  }
+}
+
+function clearRoomTimers(roomCode: string): void {
+  clearTurnTimer(roomCode);
+  clearDealTimer(roomCode);
+  clearBotActionTimer(roomCode);
+  clearRoundAdvanceTimer(roomCode);
 }
 
 function scheduleTurnTimer(room: Room, emit: Emit): void {
@@ -67,11 +102,26 @@ export function startGame(room: Room, emit: Emit): void {
   }
 
   room.game.scores = [];
-  dealRound(room, 0, emit);
+  beginDealing(room, 0, emit);
+}
+
+function beginDealing(room: Room, roundIndex: number, emit: Emit): void {
+  clearRoomTimers(room.code);
+  room.game.phase = 'dealing';
+  room.game.round = null;
+  room.game.currentTurnSeat = null;
+  room.game.turnDeadline = null;
+  emit(room);
+
+  const timer = setTimeout(() => {
+    dealTimers.delete(room.code);
+    if (room.game.phase !== 'dealing') return;
+    dealRound(room, roundIndex, emit);
+  }, SHUFFLE_ANIMATION_MS);
+  dealTimers.set(room.code, timer);
 }
 
 function dealRound(room: Room, roundIndex: number, emit: Emit): void {
-  room.game.phase = 'dealing';
   room.game.round = initRound(room, roundIndex);
 
   const deck = shuffle(createDeck());
@@ -97,6 +147,7 @@ export function placeBid(room: Room, seat: Seat, bid: number, emit: Emit): strin
   const round = room.game.round;
   if (!round || room.game.phase !== 'bidding') return 'Not in bidding phase';
   if (room.game.currentTurnSeat !== seat) return 'Not your turn';
+  if (!Number.isInteger(bid)) return 'Invalid bid';
   if (bid < MIN_BID || bid > MAX_BID) return `Bid must be ${MIN_BID}–${MAX_BID}`;
 
   round.bids[seat] = bid;
@@ -202,6 +253,7 @@ function endRound(room: Room, emit: Emit): void {
   room.game.currentTurnSeat = null;
   room.game.turnDeadline = null;
   clearTurnTimer(room.code);
+  clearBotActionTimer(room.code);
 
   const row = scoreRound(round.bids, round.tricksWon, round.index);
   room.game.scores.push(row);
@@ -209,20 +261,23 @@ function endRound(room: Room, emit: Emit): void {
   emit(room);
 
   // Auto-advance to next round or end after 5 seconds
-  setTimeout(() => {
-    if (round.index + 1 < TOTAL_ROUNDS) {
-      dealRound(room, round.index + 1, emit);
+  clearRoundAdvanceTimer(room.code);
+  const timer = setTimeout(() => {
+    roundAdvanceTimers.delete(room.code);
+    if (round.index + 1 < room.config.totalRounds) {
+      beginDealing(room, round.index + 1, emit);
     } else {
       endGame(room, emit);
     }
   }, 5000);
+  roundAdvanceTimers.set(room.code, timer);
 }
 
 function endGame(room: Room, emit: Emit): void {
   room.game.phase = 'ended';
   room.game.currentTurnSeat = null;
   room.game.turnDeadline = null;
-  clearTurnTimer(room.code);
+  clearRoomTimers(room.code);
   emit(room);
 }
 
@@ -233,10 +288,16 @@ function scheduleBotActionIfNeeded(room: Room, emit: Emit): void {
   const player = room.players.find(p => p.seat === seat);
   if (!player?.isBot) return;
 
+  const phase = room.game.phase;
+  const deadline = room.game.turnDeadline;
   const delay = 700 + Math.random() * 600;
-  setTimeout(() => {
+  clearBotActionTimer(room.code);
+  const timer = setTimeout(() => {
+    botActionTimers.delete(room.code);
     // Check still the same turn (game might have progressed)
     if (room.game.currentTurnSeat !== seat) return;
+    if (room.game.turnDeadline !== deadline) return;
+    if (room.game.phase !== phase) return;
 
     if (room.game.phase === 'bidding') {
       const bid = botBid(player.hand);
@@ -253,6 +314,7 @@ function scheduleBotActionIfNeeded(room: Room, emit: Emit): void {
       playCard(room, seat, cardToPlay.id, emit);
     }
   }, delay);
+  botActionTimers.set(room.code, timer);
 }
 
 export function autoAction(room: Room, emit: Emit): void {
@@ -273,7 +335,7 @@ export function autoAction(room: Room, emit: Emit): void {
 export function rematch(room: Room, emit: Emit): void {
   // Keep players, reset game
   for (const p of room.players) p.hand = [];
-  clearTurnTimer(room.code);
+  clearRoomTimers(room.code);
   room.game = { phase: 'waiting', round: null, scores: [], currentTurnSeat: null, turnDeadline: null };
   emit(room);
 }

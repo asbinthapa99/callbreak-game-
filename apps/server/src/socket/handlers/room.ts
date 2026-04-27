@@ -11,12 +11,42 @@ import { fillEmptySeatsWithBots, findSeatForHuman, isSeat, makeBot } from '../..
 
 const MIN_TURN_TIMEOUT_MS = 5000;
 const MAX_TURN_TIMEOUT_MS = 120000;
+const MIN_TOTAL_ROUNDS = 1;
+const MAX_TOTAL_ROUNDS = 10;
+const MAX_AVATAR_URL_LENGTH = 10000;
 
-function sanitizeConfigUpdate(config: Partial<typeof DEFAULT_CONFIG>): Partial<typeof DEFAULT_CONFIG> {
+function sanitizeName(name: string | undefined): string | null {
+  const trimmed = name?.trim();
+  if (!trimmed || trimmed.length > 16) return null;
+  return trimmed;
+}
+
+function sanitizeSessionId(sessionId: string | undefined): string | null {
+  const trimmed = sessionId?.trim();
+  if (!trimmed || trimmed.length > 80) return null;
+  return trimmed;
+}
+
+function sanitizeAvatarUrl(avatarUrl: string | undefined): string | undefined {
+  if (typeof avatarUrl !== 'string') return undefined;
+  if (avatarUrl.length > MAX_AVATAR_URL_LENGTH) return undefined;
+  if (!avatarUrl.startsWith('data:image/') && !avatarUrl.startsWith('https://')) return undefined;
+  return avatarUrl;
+}
+
+function sanitizeConfigUpdate(config: Partial<typeof DEFAULT_CONFIG> = {}): Partial<typeof DEFAULT_CONFIG> {
   const next: Partial<typeof DEFAULT_CONFIG> = {};
 
   if (typeof config.loserPenalty === 'string') {
     next.loserPenalty = config.loserPenalty.trim().slice(0, 200);
+  }
+
+  if (typeof config.customSettingsEnabled === 'boolean') {
+    next.customSettingsEnabled = config.customSettingsEnabled;
+  }
+
+  if (typeof config.totalRounds === 'number' && Number.isFinite(config.totalRounds)) {
+    next.totalRounds = Math.max(MIN_TOTAL_ROUNDS, Math.min(MAX_TOTAL_ROUNDS, Math.round(config.totalRounds)));
   }
 
   if (typeof config.turnTimeoutMs === 'number' && Number.isFinite(config.turnTimeoutMs)) {
@@ -36,38 +66,50 @@ function sanitizeConfigUpdate(config: Partial<typeof DEFAULT_CONFIG>): Partial<t
 
 export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
   socket.on('room:create', ({ name, sessionId, avatarUrl, config }, ack) => {
-    if (!name?.trim() || name.length > 16) {
+    const cleanName = sanitizeName(name);
+    if (!cleanName) {
       ack({ ok: false, error: 'Name must be 1–16 characters' });
       return;
     }
+    const cleanSessionId = sanitizeSessionId(sessionId);
+    if (!cleanSessionId) {
+      ack({ ok: false, error: 'Invalid session' });
+      return;
+    }
 
-    const room = createRoom(sessionId, sanitizeConfigUpdate(config));
+    const room = createRoom(cleanSessionId, sanitizeConfigUpdate(config));
     const seat: Seat = 0;
 
     room.players.push({
       id: socket.id,
-      sessionId,
-      name: name.trim(),
+      sessionId: cleanSessionId,
+      name: cleanName,
       seat,
       isHost: true,
       isBot: false,
       connected: true,
-      avatarUrl,
+      avatarUrl: sanitizeAvatarUrl(avatarUrl),
       hand: [],
     });
 
     socket.join(room.code);
-    setSocketSession(socket.id, { sessionId, roomCode: room.code, seat });
+    setSocketSession(socket.id, { sessionId: cleanSessionId, roomCode: room.code, seat });
 
     const view = buildRoomView(room, seat);
     socket.emit('room:state', view);
     ack({ ok: true, data: { code: room.code } });
-    logger.info(`Room created: ${room.code} by ${name}`);
+    logger.info(`Room created: ${room.code} by ${cleanName}`);
   });
 
   socket.on('room:join', ({ code, name, sessionId, avatarUrl }, ack) => {
-    if (!name?.trim() || name.length > 16) {
+    const cleanName = sanitizeName(name);
+    if (!cleanName) {
       ack({ ok: false, error: 'Name must be 1–16 characters' });
+      return;
+    }
+    const cleanSessionId = sanitizeSessionId(sessionId);
+    if (!cleanSessionId) {
+      ack({ ok: false, error: 'Invalid session' });
       return;
     }
 
@@ -92,23 +134,23 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
 
     room.players.push({
       id: socket.id,
-      sessionId,
-      name: name.trim(),
+      sessionId: cleanSessionId,
+      name: cleanName,
       seat,
       isHost: false,
       isBot: false,
       connected: true,
-      avatarUrl,
+      avatarUrl: sanitizeAvatarUrl(avatarUrl),
       hand: [],
     });
 
     socket.join(room.code);
-    setSocketSession(socket.id, { sessionId, roomCode: room.code, seat });
+    setSocketSession(socket.id, { sessionId: cleanSessionId, roomCode: room.code, seat });
     touchRoom(room.code);
 
     broadcastRoomState(io, room);
     ack({ ok: true, data: { seat } });
-    logger.info(`Player joined: ${name} room ${code} seat ${seat}`);
+    logger.info(`Player joined: ${cleanName} room ${code} seat ${seat}`);
   });
 
   socket.on('room:leave', () => {
@@ -155,7 +197,10 @@ export function registerRoomHandlers(io: TypedIO, socket: TypedSocket): void {
     if (hostPlayer?.id !== socket.id) { ack({ ok: false, error: 'Only host can update settings' }); return; }
     if (room.game.phase !== 'waiting') { ack({ ok: false, error: 'Settings can only be changed before the game starts' }); return; }
 
-    room.config = { ...room.config, ...sanitizeConfigUpdate(config) };
+    const sanitized = sanitizeConfigUpdate(config);
+    room.config = sanitized.customSettingsEnabled === false
+      ? { ...DEFAULT_CONFIG }
+      : { ...room.config, ...sanitized };
     touchRoom(room.code);
     broadcastRoomState(io, room);
     ack({ ok: true, data: {} });

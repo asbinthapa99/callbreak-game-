@@ -46,6 +46,7 @@ export function registerGameHandlers(io: TypedIO, socket: TypedSocket): void {
   socket.on('game:bid', ({ bid }, ack) => {
     const room = getPlayerRoom(socket);
     if (!room) { ack({ ok: false, error: 'Not in a room' }); return; }
+    if (!Number.isInteger(bid)) { ack({ ok: false, error: 'Invalid bid' }); return; }
 
     const player = room.players.find(p => p.id === socket.id);
     if (!player) { ack({ ok: false, error: 'Not a player' }); return; }
@@ -60,6 +61,7 @@ export function registerGameHandlers(io: TypedIO, socket: TypedSocket): void {
   socket.on('game:play', ({ cardId }, ack) => {
     const room = getPlayerRoom(socket);
     if (!room) { ack({ ok: false, error: 'Not in a room' }); return; }
+    if (typeof cardId !== 'string' || cardId.length > 8) { ack({ ok: false, error: 'Invalid card' }); return; }
 
     const player = room.players.find(p => p.id === socket.id);
     if (!player) { ack({ ok: false, error: 'Not a player' }); return; }
