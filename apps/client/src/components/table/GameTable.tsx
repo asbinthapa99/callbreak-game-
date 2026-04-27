@@ -15,6 +15,7 @@ import ChatPanel from '../chat/ChatPanel.js';
 import TurnTimer from '../ui/TurnTimer.js';
 import RulesModal from '../ui/RulesModal.js';
 import { sounds } from '../../lib/sounds.js';
+import ShuffleOverlay from './ShuffleOverlay.js';
 
 const AVATAR_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
 
@@ -41,7 +42,9 @@ export default function GameTable() {
     prevTurnRef.current = game.currentTurnSeat;
 
     const broken = game.round?.spadesBroken ?? false;
-    if (broken && !prevBrokenRef.current) showToast({ kind: 'info', message: '♠ Spades are broken!' });
+    if (roomView.config.spadeBreakingEnabled && broken && !prevBrokenRef.current) {
+      showToast({ kind: 'info', message: '♠ Spades are broken!' });
+    }
     prevBrokenRef.current = broken;
 
     const completed = game.round?.completedTricks ?? [];
@@ -207,7 +210,7 @@ export default function GameTable() {
               </span>
             )}
           </div>
-          {spadesBroken && (
+          {config.spadeBreakingEnabled && spadesBroken && (
             <div className="text-[11px] text-purple-300 animate-fade-in">♠ spades broken</div>
           )}
         </div>
@@ -306,6 +309,20 @@ export default function GameTable() {
       <Scoreboard open={scoreboardOpen} onClose={() => setScoreboardOpen(false)} />
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <GameOverModal />
+      <AnimatePresence>
+        {game.phase === 'dealing' && (
+          <motion.div
+            key="shuffle-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50"
+          >
+            <ShuffleOverlay />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

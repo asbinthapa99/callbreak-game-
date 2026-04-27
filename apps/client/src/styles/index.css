@@ -166,6 +166,65 @@
   /* ── Status dots ── */
   .status-dot-online  { background: #10b981; box-shadow: 0 0 8px #10b981; }
   .status-dot-offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+  /* ── Shuffle overlay ── */
+  .shuffle-overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at center, rgba(20, 83, 45, 0.74), rgba(2, 6, 23, 0.88) 68%);
+    backdrop-filter: blur(7px);
+  }
+
+  .shuffle-cards {
+    display: grid;
+    grid-template-areas: "cards";
+    list-style: none;
+    transform: translateY(-6%);
+    animation: shuffleDeckDrift 1.8s ease-in-out infinite;
+  }
+
+  .shuffle-card {
+    grid-area: cards;
+    width: clamp(78px, 18vmin, 132px);
+    aspect-ratio: 2.5 / 3.5;
+    border-radius: clamp(9px, 2vmin, 18px);
+    border: 2px solid rgba(0, 0, 0, 0.28);
+    background-color: #f0f0f0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M81.28 88H68.413l19.298 19.298L81.28 88zm2.107 0h13.226L90 107.838 83.387 88zm15.334 0h12.866l-19.298 19.298L98.72 88zm-32.927-2.207L73.586 78h32.827l.5.5 7.294 7.293L115.414 87l-24.707 24.707-.707.707L64.586 87l1.207-1.207zm2.62.207L74 80.414 79.586 86H68.414zm16 0L90 80.414 95.586 86H84.414zm16 0L106 80.414 111.586 86h-11.172zM17.414 0L.707 16.707 0 17.414V0h17.414zM180 17.414L162.586 0H180v17.414zM0 163h16.413l.5.5 7.294 7.293L25.414 172l-8 8H0v-17zm180 0h-16.413l-7.794 7.793-1.207 1.207 8 8H180v-17zM152.933 25.653l1.414 1.414-33.94 33.942-1.416-1.416 33.943-33.94zm1.414 127.28l-1.414 1.414-33.942-33.94 1.416-1.416 33.94 33.943zm-127.28 1.414l-1.414-1.414 33.94-33.942 1.416 1.416-33.943 33.94zm-1.414-127.28l1.414-1.414 33.942 33.94-1.416 1.416-33.94-33.943zM0 85c2.21 0 4 1.79 4 4s-1.79 4-4 4v-8zm180 0c-2.21 0-4 1.79-4 4s1.79 4 4 4v-8zM94 0c0 2.21-1.79 4-4 4s-4-1.79-4-4h8zm0 180c0-2.21-1.79-4-4-4s-4 1.79-4 4h8z' fill='%23000000' fill-opacity='0.22' fill-rule='evenodd'/%3E%3C/svg%3E"),
+      radial-gradient(circle at 50% 45%, #dc2626 0%, #991b1b 64%, #4c0519 100%);
+    background-size: 46%, 100%;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    will-change: transform;
+    animation: shuffleCardSweep 1.8s cubic-bezier(0.77, 0, 0.18, 1) infinite;
+  }
+
+  .shuffle-card:nth-child(1) { animation-delay: 0ms; }
+  .shuffle-card:nth-child(2) { animation-delay: 45ms; }
+  .shuffle-card:nth-child(3) { animation-delay: 90ms; }
+  .shuffle-card:nth-child(4) { animation-delay: 135ms; }
+  .shuffle-card:nth-child(5) { animation-delay: 180ms; }
+  .shuffle-card:nth-child(6) { animation-delay: 225ms; }
+  .shuffle-card:nth-child(7) { animation-delay: 270ms; }
+  .shuffle-card:nth-child(8) { animation-delay: 315ms; }
+  .shuffle-card:nth-child(9) { animation-delay: 360ms; }
+  .shuffle-card:nth-child(10) { animation-delay: 405ms; }
+  .shuffle-card:nth-child(11) { animation-delay: 450ms; }
+  .shuffle-card:nth-child(12) { animation-delay: 495ms; }
+
+  .shuffle-label {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + clamp(84px, 18vmin, 150px));
+    transform: translateX(-50%);
+    color: #facc15;
+    font-family: 'Fredoka One', system-ui, sans-serif;
+    font-size: clamp(1.1rem, 4vmin, 2rem);
+    letter-spacing: 0.08em;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.65);
+  }
 }
 
 /* ── Keyframes ── */
@@ -209,6 +268,26 @@
 @keyframes timerPulse {
   0%, 100% { opacity: 1; filter: brightness(1); }
   50%       { opacity: 0.7; filter: brightness(1.3); }
+}
+
+@keyframes shuffleDeckDrift {
+  0%, 100% { transform: translateY(-8%); }
+  50%      { transform: translateY(8%); }
+}
+
+@keyframes shuffleCardSweep {
+  0% {
+    transform: translateY(-60%) rotate(44deg) scale(1);
+  }
+  36% {
+    transform: translateY(0) rotate(58deg) scale(0.96);
+  }
+  70% {
+    transform: translateY(60%) rotate(66deg) scale(1);
+  }
+  100% {
+    transform: translateY(-60%) rotate(44deg) scale(1);
+  }
 }
 
 .animate-slide-in-up   { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

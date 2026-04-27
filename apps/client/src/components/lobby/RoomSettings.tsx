@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEFAULT_CONFIG } from '@callbreak/shared';
 import type { RoomConfig } from '@callbreak/shared';
 import { socket } from '../../socket/client.js';
 import { useRoomStore } from '../../store/room.js';
@@ -17,6 +18,8 @@ const TURN_TIMEOUT_OPTIONS = [
   { label: '60s', value: 60000 },
 ];
 
+const ROUND_OPTIONS = [1, 3, 5, 7, 10];
+
 export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
   const showToast = useRoomStore(s => s.showToast);
   const [penalty, setPenalty] = useState(config.loserPenalty);
@@ -33,8 +36,45 @@ export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
     });
   }
 
+  const customEnabled = config.customSettingsEnabled;
+  const controlsDisabled = !isHost || !customEnabled;
+
   return (
     <div className="space-y-4">
+      <label className="bg-white/5 border-2 border-cb-gold/25 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+        <div>
+          <span className="block text-white font-body text-sm">Custom settings</span>
+          <span className="block text-white/45 font-body text-xs">
+            {customEnabled ? 'Host controls the match setup' : 'Auto mode uses default settings'}
+          </span>
+        </div>
+        <input
+          type="checkbox"
+          className="h-4 w-4 accent-cb-gold"
+          checked={customEnabled}
+          disabled={!isHost}
+          onChange={e => updateConfig(e.target.checked ? { customSettingsEnabled: true } : { ...DEFAULT_CONFIG })}
+        />
+      </label>
+
+      <div>
+        <label className="block text-cb-gold font-display text-sm uppercase tracking-wide mb-2">
+          Rounds
+        </label>
+        <select
+          className="input-field w-full"
+          value={customEnabled ? config.totalRounds : DEFAULT_CONFIG.totalRounds}
+          disabled={controlsDisabled}
+          onChange={e => updateConfig({ totalRounds: Number(e.target.value) })}
+        >
+          {ROUND_OPTIONS.map(rounds => (
+            <option key={rounds} value={rounds}>
+              {rounds} round{rounds === 1 ? '' : 's'}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label className="block text-cb-gold font-display text-sm uppercase tracking-wide mb-2">
           Loser&apos;s Penalty
@@ -46,6 +86,7 @@ export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
             maxLength={200}
             placeholder="Optional"
             value={penalty}
+            disabled={controlsDisabled}
             onChange={e => {
               const value = e.target.value;
               setPenalty(value);
@@ -66,7 +107,7 @@ export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
             type="checkbox"
             className="h-4 w-4 accent-cb-gold"
             checked={config.fillWithBots}
-            disabled={!isHost}
+            disabled={controlsDisabled}
             onChange={e => updateConfig({ fillWithBots: e.target.checked })}
           />
         </label>
@@ -77,7 +118,7 @@ export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
             type="checkbox"
             className="h-4 w-4 accent-cb-gold"
             checked={config.spadeBreakingEnabled}
-            disabled={!isHost}
+            disabled={controlsDisabled}
             onChange={e => updateConfig({ spadeBreakingEnabled: e.target.checked })}
           />
         </label>
@@ -90,7 +131,7 @@ export default function RoomSettings({ config, isHost }: RoomSettingsProps) {
         <select
           className="input-field w-full"
           value={config.turnTimeoutMs}
-          disabled={!isHost}
+          disabled={controlsDisabled}
           onChange={e => updateConfig({ turnTimeoutMs: Number(e.target.value) })}
         >
           {TURN_TIMEOUT_OPTIONS.map(option => (

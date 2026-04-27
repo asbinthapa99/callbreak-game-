@@ -36,6 +36,13 @@ export default function TrickArea() {
   const [flash, setFlash]     = useState<Seat | null>(null);
   const prevCountRef          = useRef(0);
   const prevPlaysRef          = useRef(0);
+  const flashTimerRef         = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (flashTimerRef.current !== null) {
+      window.clearTimeout(flashTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (!roomView) return;
@@ -50,7 +57,13 @@ export default function TrickArea() {
       if (last?.winnerSeat !== undefined) {
         setFlash(last.winnerSeat);
         last.winnerSeat === roomView.yourSeat ? sounds.trickWon() : sounds.trickLost();
-        setTimeout(() => setFlash(null), 800);
+        if (flashTimerRef.current !== null) {
+          window.clearTimeout(flashTimerRef.current);
+        }
+        flashTimerRef.current = window.setTimeout(() => {
+          setFlash(null);
+          flashTimerRef.current = null;
+        }, 800);
       }
     }
     prevCountRef.current = completedCount;
