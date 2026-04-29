@@ -15,7 +15,9 @@ const turnTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const dealTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const botActionTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const roundAdvanceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const trickSettleTimers = new Map<string, ReturnType<typeof setTimeout>>();
 export const SHUFFLE_ANIMATION_MS = 1800;
+export const TRICK_SETTLE_MS = 900;
 
 // nextSeat anti-clockwise (decrement mod 4)
 function prevSeat(seat: Seat): Seat {
@@ -56,11 +58,20 @@ function clearRoundAdvanceTimer(roomCode: string): void {
   }
 }
 
+function clearTrickSettleTimer(roomCode: string): void {
+  const timer = trickSettleTimers.get(roomCode);
+  if (timer) {
+    clearTimeout(timer);
+    trickSettleTimers.delete(roomCode);
+  }
+}
+
 function clearRoomTimers(roomCode: string): void {
   clearTurnTimer(roomCode);
   clearDealTimer(roomCode);
   clearBotActionTimer(roomCode);
   clearRoundAdvanceTimer(roomCode);
+  clearTrickSettleTimer(roomCode);
 }
 
 function scheduleTurnTimer(room: Room, emit: Emit): void {
@@ -218,23 +229,18 @@ export function playCard(room: Room, seat: Seat, cardId: string, emit: Emit): st
   }
 
   if (trick.plays.length === PLAYER_COUNT) {
-    // Trick complete
     const winnerSeat = winnerOfTrick(trick);
     trick.winnerSeat = winnerSeat;
-    round.tricksWon[winnerSeat]++;
-    round.completedTricks.push({ ...trick });
-    round.currentTrick = null;
-    round.leadSuit = null;
 
-    if (round.completedTricks.length === 13) {
-      // Round over
-      endRound(room, emit);
-      return null;
-    }
-
-    // Next trick — winner leads
-    round.currentTrick = { leaderSeat: winnerSeat, plays: [] };
-    room.game.currentTurnSeat = winnerSeat;
+    // Broadcast the full four-card trick before advancing so clients can
+    // render the final played card and winner animation consistently.
+    room.game.currentTurnSeat = null;
+    room.game.turnDeadline = null;
+    clearTurnTimer(room.code);
+    clearBotActionTimer(room.code);
+    emit(room);
+    scheduleTrickSettle(room, trick, emit);
+    return null;
   } else {
     // Next player in anti-clockwise order
     room.game.currentTurnSeat = prevSeat(seat);
@@ -245,6 +251,37 @@ export function playCard(room: Room, seat: Seat, cardId: string, emit: Emit): st
   scheduleTurnTimer(room, emit);
   scheduleBotActionIfNeeded(room, emit);
   return null;
+}
+
+function scheduleTrickSettle(room: Room, trick: NonNullable<RoundState['currentTrick']>, emit: Emit): void {
+  clearTrickSettleTimer(room.code);
+
+  const timer = setTimeout(() => {
+    trickSettleTimers.delete(room.code);
+    const round = room.game.round;
+    if (!round || room.game.phase !== 'playing') return;
+    if (round.currentTrick !== trick) return;
+    if (trick.plays.length !== PLAYER_COUNT || trick.winnerSeat === undefined) return;
+
+    const winnerSeat = trick.winnerSeat;
+    round.tricksWon[winnerSeat]++;
+    round.completedTricks.push({ ...trick, plays: [...trick.plays] });
+    round.currentTrick = null;
+    round.leadSuit = null;
+
+    if (round.completedTricks.length === 13) {
+      endRound(room, emit);
+      return;
+    }
+
+    round.currentTrick = { leaderSeat: winnerSeat, plays: [] };
+    room.game.currentTurnSeat = winnerSeat;
+    room.game.turnDeadline = Date.now() + room.config.turnTimeoutMs;
+    emit(room);
+    scheduleTurnTimer(room, emit);
+    scheduleBotActionIfNeeded(room, emit);
+  }, TRICK_SETTLE_MS);
+  trickSettleTimers.set(room.code, timer);
 }
 
 function endRound(room: Room, emit: Emit): void {

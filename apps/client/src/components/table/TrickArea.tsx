@@ -80,6 +80,8 @@ export default function TrickArea() {
     ? (lastCompleted.winnerSeat - yourSeat + 4) % 4
     : 0;
 
+  const playsToRender = flash !== null && lastCompleted ? lastCompleted.plays : (trick?.plays ?? []);
+
   return (
     <div className="relative flex items-center justify-center" style={{ width: 310, height: 120 }}>
 
@@ -107,7 +109,7 @@ export default function TrickArea() {
       {/* Cards side by side */}
       <div className="flex items-center gap-3">
         <AnimatePresence>
-          {trick?.plays.map((play, i) => {
+          {playsToRender.map((play, i) => {
             const displaySeat = (play.seat - yourSeat + 4) % 4;
 
             return (

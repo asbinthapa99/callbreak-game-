@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Room, Player, Seat } from '@callbreak/shared';
+import type { Card, Room, Player, Seat } from '@callbreak/shared';
 import { DEFAULT_CONFIG } from '@callbreak/shared';
-import { SHUFFLE_ANIMATION_MS, startGame, placeBid, rematch } from './game-engine.js';
+import { SHUFFLE_ANIMATION_MS, TRICK_SETTLE_MS, startGame, placeBid, playCard, rematch } from './game-engine.js';
 
 function makePlayer(seat: Seat, overrides: Partial<Player> = {}): Player {
   return {
@@ -27,6 +27,10 @@ function makeRoom(config: Partial<Room['config']> = {}, players: Player[] = [mak
     createdAt: Date.now(),
     lastActivity: Date.now(),
   };
+}
+
+function card(id: string, rank: Card['rank'], suit: Card['suit']): Card {
+  return { id, rank, suit };
 }
 
 afterEach(() => {
@@ -81,6 +85,51 @@ describe('game engine', () => {
     const currentSeat = room.game.currentTurnSeat as Seat;
     expect(placeBid(room, currentSeat, Number.NaN, emit)).toBe('Invalid bid');
     expect(room.game.round?.bids[currentSeat]).toBeNull();
+  });
+
+  it('keeps the fourth played card visible before advancing to the next trick', () => {
+    vi.useFakeTimers();
+
+    const emit = vi.fn();
+    const players = [
+      makePlayer(0, { hand: [card('hA', 'A', 'hearts')] }),
+      makePlayer(1, { hand: [card('hJ', 'J', 'hearts')] }),
+      makePlayer(2, { hand: [card('hQ', 'Q', 'hearts')] }),
+      makePlayer(3, { hand: [card('hK', 'K', 'hearts')] }),
+    ];
+    const room = makeRoom({ fillWithBots: false }, players);
+    room.game.phase = 'playing';
+    room.game.round = {
+      index: 0,
+      dealerSeat: 1,
+      bids: { 0: 1, 1: 1, 2: 1, 3: 1 },
+      tricksWon: { 0: 0, 1: 0, 2: 0, 3: 0 },
+      currentTrick: { leaderSeat: 0, plays: [] },
+      completedTricks: [],
+      leadSuit: null,
+      spadesBroken: false,
+    };
+    room.game.currentTurnSeat = 0;
+    room.game.turnDeadline = Date.now() + room.config.turnTimeoutMs;
+
+    expect(playCard(room, 0, 'hA', emit)).toBeNull();
+    expect(playCard(room, 3, 'hK', emit)).toBeNull();
+    expect(playCard(room, 2, 'hQ', emit)).toBeNull();
+    expect(playCard(room, 1, 'hJ', emit)).toBeNull();
+
+    expect(room.game.round.currentTrick?.plays).toHaveLength(4);
+    expect(room.game.round.currentTrick?.winnerSeat).toBe(0);
+    expect(room.game.round.completedTricks).toHaveLength(0);
+    expect(room.game.currentTurnSeat).toBeNull();
+    expect(room.game.turnDeadline).toBeNull();
+
+    vi.advanceTimersByTime(TRICK_SETTLE_MS);
+
+    expect(room.game.round.completedTricks).toHaveLength(1);
+    expect(room.game.round.completedTricks[0].plays).toHaveLength(4);
+    expect(room.game.round.currentTrick).toEqual({ leaderSeat: 0, plays: [] });
+    expect(room.game.currentTurnSeat).toBe(0);
+    expect(room.game.turnDeadline).not.toBeNull();
   });
 
   it('rematch resets the game back to waiting state', () => {
